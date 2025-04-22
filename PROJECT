@@ -8,8 +8,8 @@ layout:
 plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
-projectName: kscale
-repo: github.com/cicd-toolkit/kscale
+projectName: kubescale
+repo: github.com/cicd-toolkit/kubescale
 resources:
 - controller: true
   domain: kubescale.io

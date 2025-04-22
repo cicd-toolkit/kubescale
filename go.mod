@@ -1,4 +1,4 @@
-module github.com/cicd-toolkit/kscale
+module github.com/cicd-toolkit/kubescale
 
 go 1.24.2
 

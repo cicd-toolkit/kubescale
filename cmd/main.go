@@ -35,7 +35,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	"github.com/cicd-toolkit/kscale/internal/controller"
+	"github.com/cicd-toolkit/kubescale/internal/controller"
 	// +kubebuilder:scaffold:imports
 )
 
