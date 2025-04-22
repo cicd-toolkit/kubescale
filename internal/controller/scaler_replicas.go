@@ -38,7 +38,6 @@ func (r *ScalerReconciler) handleReplicatedResource(
 		log.Info("No annotations found for resource", "namespace", meta.Namespace, "name", meta.Name)
 		return
 	}
-	// fmt.Printf("Processing %s/%s\n", meta.Namespace, meta.Name)
 	if shouldSkipResource(meta) {
 		log.Info("Skipping resource", "namespace", meta.Namespace, "name", meta.Name)
 		return
@@ -48,7 +47,6 @@ func (r *ScalerReconciler) handleReplicatedResource(
 
 	// Handle downtime first (it takes priority)
 	if val, ok := annotations[DowntimeAnnotation]; ok {
-		// fmt.Printf("Found downtime annotation for %s/%s = %s\n", meta.Namespace, meta.Name, val)
 		sd, ed, st, et, loc, err := parseScalerAnnotation(val)
 		if err == nil {
 			inDowntime = isNowInUptime(sd, ed, st, et, loc)
@@ -57,7 +55,6 @@ func (r *ScalerReconciler) handleReplicatedResource(
 
 	if !inDowntime {
 		if val, ok := annotations[UptimeAnnotation]; ok {
-			// fmt.Printf("Found uptime annotation for %s/%s = %s\n", meta.Namespace, meta.Name, val)
 			sd, ed, st, et, loc, err := parseScalerAnnotation(val)
 			if err == nil {
 				inUptime = isNowInUptime(sd, ed, st, et, loc)

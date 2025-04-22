@@ -1,4 +1,4 @@
-# kscale
+# kubescaler
 # 🧭 Kubescale Operator – Annotation Guide
 
 The **Kubescale Operator** enables automatic scaling of Deployments, StatefulSets, and CronJobs based on custom annotations.
@@ -74,7 +74,7 @@ kubescale/exclude-until: "2025-04-23T08:00:00Z"
 **Build and push your image to the location specified by `IMG`:**
 
 ```sh
-make docker-build docker-push IMG=<some-registry>/kscale:tag
+make docker-build docker-push IMG=<some-registry>/kubescaler:tag
 ```
 
 **NOTE:** This image ought to be published in the personal registry you specified.
@@ -90,27 +90,9 @@ make install
 **Deploy the Manager to the cluster with the image specified by `IMG`:**
 
 ```sh
-make deploy IMG=<some-registry>/kscale:tag
+make deploy IMG=<some-registry>/kubescaler:tag
 ```
 
-> **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
-privileges or be logged in as admin.
-
-**Create instances of your solution**
-You can apply the samples (examples) from the config/sample:
-
-```sh
-kubectl apply -k config/samples/
-```
-
->**NOTE**: Ensure that the samples has default values to test it out.
-
-### To Uninstall
-**Delete the instances (CRs) from the cluster:**
-
-```sh
-kubectl delete -k config/samples/
-```
 
 **Delete the APIs(CRDs) from the cluster:**
 
@@ -131,7 +113,7 @@ Following are the steps to build the installer and distribute this project to us
 1. Build the installer for the image built and published in the registry:
 
 ```sh
-make build-installer IMG=<some-registry>/kscale:tag
+make build-installer IMG=<some-registry>/kubescaler:tag
 ```
 
 NOTE: The makefile target mentioned above generates an 'install.yaml'
@@ -144,7 +126,7 @@ its dependencies.
 Users can just run kubectl apply -f <URL for YAML BUNDLE> to install the project, i.e.:
 
 ```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/kscale/<tag or branch>/dist/install.yaml
+kubectl apply -f https://raw.githubusercontent.com/<org>/kubescaler/<tag or branch>/dist/install.yaml
 ```
 
 ## Contributing

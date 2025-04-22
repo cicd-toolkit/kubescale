@@ -1,0 +1,68 @@
+## How many kubescaler pods should run in deployment
+replicaCount: 1
+
+rbac:
+  ## If true, create & use RBAC resources
+  create: true
+  ## Ignored if rbac.create is true
+  serviceAccountName: kubescaler
+  extraRules: []
+   # - apiGroups:
+   #     - argoproj.io
+   #   resources:
+   #     - rollouts
+   #   verbs:
+   #     - get
+   #     - watch
+   #     - list
+   #     - update
+   #     - patch
+
+image:
+  repository: devopscloud/kubescaler
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+  args: []
+    # - --include-resources=deployments,cronjobs
+
+resources:
+  limits:
+    cpu: 50m
+    memory: 200Mi
+  requests:
+    cpu: 50m
+    memory: 200Mi
+
+podSecurityContext:
+  fsGroupChangePolicy: Always
+  sysctls: []
+  supplementalGroups: []
+
+containerSecurityContext:
+  seLinuxOptions: {}
+  runAsUser: 1001
+  runAsGroup: 1001
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: "RuntimeDefault"
+
+extraLabels: {}
+
+# Set environment variables to override the default configuration
+deployment:
+  environment: {}
+    # DEFAULT_UPTIME: "Mon-Fri 07:00-20:00 Europe/Berlin"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+priorityClassName: ""
