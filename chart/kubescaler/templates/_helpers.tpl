@@ -2,7 +2,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "kube-downscaler.name" -}}
+{{- define "kubescaler.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
@@ -10,7 +10,7 @@ Expand the name of the chart.
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
-{{- define "kube-downscaler.fullname" -}}
+{{- define "kubescaler.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -26,7 +26,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "kube-downscaler.chart" -}}
+{{- define "kubescaler.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
@@ -44,9 +44,9 @@ Return the appropriate apiVersion for RBAC APIs.
 {{/*
 Common labels
 */}}
-{{- define "kube-downscaler.labels" -}}
-app.kubernetes.io/name: {{ include "kube-downscaler.name" . }}
-helm.sh/chart: {{ include "kube-downscaler.chart" . }}
+{{- define "kubescaler.labels" -}}
+app.kubernetes.io/name: {{ include "kubescaler.name" . }}
+helm.sh/chart: {{ include "kubescaler.chart" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}

@@ -31,7 +31,7 @@ func TestParseHumanDuration(t *testing.T) {
 		}
 	}
 }
-func TestParseUptimeAnnotation(t *testing.T) {
+func TestParseScalerAnnotation(t *testing.T) {
 	tests := []struct {
 		input       string
 		startDay    int
@@ -50,7 +50,7 @@ func TestParseUptimeAnnotation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		startDay, endDay, startTime, endTime, loc, err := parseUptimeAnnotation(test.input)
+		startDay, endDay, startTime, endTime, loc, err := parseScalerAnnotation(test.input)
 		if test.expectError {
 			assert.Error(t, err, "expected an error for input: %s with ", test.input)
 		} else {

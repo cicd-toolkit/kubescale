@@ -19,7 +19,7 @@ rbac:
    #     - patch
 
 image:
-  repository: devopscloud/kubescaler
+  repository: devopscloud/kubescale
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
   pullPolicy: IfNotPresent
