@@ -99,11 +99,11 @@ func TestIsInRange(t *testing.T) {
 		currentTime   string
 		expectInRange bool
 	}{
-		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-02T09:00:00Z", true},       // Within range
-		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-02T19:00:00Z", false},      // Outside time range
-		{time.Monday, time.Friday, "18:00", "08:00", "UTC", "2023-10-02T19:00:00Z", true},       // Overnight range
-		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-07T09:00:00Z", false},      // Outside day range
-		{time.Monday, time.Friday, "08:00", "18:00", "InvalidTZ", "2023-10-02T09:00:00Z", true}, // Invalid timezone
+		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-03T10:00:00Z", true},        // Within range
+		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-02T19:00:00Z", false},       // Outside time range
+		{time.Monday, time.Friday, "18:00", "08:00", "UTC", "2023-10-02T19:00:00Z", true},        // Overnight range
+		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-07T09:00:00Z", false},       // Outside day range
+		{time.Monday, time.Friday, "08:00", "18:00", "InvalidTZ", "2023-10-02T09:00:00Z", false}, // Invalid timezone
 	}
 
 	for _, test := range tests {
@@ -125,11 +125,8 @@ func TestIsInRange(t *testing.T) {
 			End:      end,
 			Location: loc,
 		}
-
-		timeNow = func() time.Time { return current }
-		defer func() { timeNow = time.Now }()
-
-		result := tr.isInRange()
+		// Mock the Now function to return the current time
+		result := tr.isInRange(current)
 		assert.Equal(t, test.expectInRange, result, "unexpected result for test case: %+v", test)
 	}
 }

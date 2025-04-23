@@ -82,12 +82,12 @@ func parseScalerAnnotation(annot string) (*TimeRange, error) {
 	}, nil
 }
 
-func (tr *TimeRange) Now() time.Time {
-	return time.Now().In(tr.Location)
-}
-
-func (tr *TimeRange) isInRange() bool {
-	now := tr.Now()
+func (tr *TimeRange) isInRange(t time.Time) bool {
+	now := time.Now().In(tr.Location)
+	if !t.IsZero() {
+		fmt.Printf("Using provided time: %s\n", t)
+		now = t.In(tr.Location)
+	}
 	weekday := int(now.Weekday())
 	fmt.Printf("Current time: %s, Weekday: %d\n", now.Format("15:04"), weekday)
 
