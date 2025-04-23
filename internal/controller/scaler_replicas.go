@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,17 +48,17 @@ func (r *ScalerReconciler) handleReplicatedResource(
 
 	// Handle downtime first (it takes priority)
 	if val, ok := annotations[DowntimeAnnotation]; ok {
-		sd, ed, st, et, loc, err := parseScalerAnnotation(val)
+		timerange, err := parseScalerAnnotation(val)
 		if err == nil {
-			inDowntime = isNowInUptime(sd, ed, st, et, loc)
+			inDowntime = timerange.isInRange(time.Time{})
 		}
 	}
 
 	if !inDowntime {
 		if val, ok := annotations[UptimeAnnotation]; ok {
-			sd, ed, st, et, loc, err := parseScalerAnnotation(val)
+			timerange, err := parseScalerAnnotation(val)
 			if err == nil {
-				inUptime = isNowInUptime(sd, ed, st, et, loc)
+				inUptime = timerange.isInRange(time.Time{})
 			}
 		}
 	}

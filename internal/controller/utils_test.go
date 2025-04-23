@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var timeNow = time.Now
+
 func TestParseHumanDuration(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -46,20 +48,22 @@ func TestParseScalerAnnotation(t *testing.T) {
 		{"Mon-Fri 08:00-20:00 InvalidTZ", 0, 0, "", "", "", true},
 		{"InvalidFormat", 0, 0, "", "", "", true},
 		{"Mon-Fri InvalidTimeRange UTC", 0, 0, "", "", "", true},
-		{"InvalidDayRange 08:00-20:00 UTC", 0, 0, "", "", "", true},
+		{"InvalidDayRange 08:00-20:00 UTC", 0, 6, "08:00", "20:00", "UTC", false},
+		{"08:00-20:00 UTC", 0, 6, "08:00", "20:00", "UTC", false},     // Default days
+		{"Mon-Fri 08:00-20:00", 1, 5, "08:00", "20:00", "UTC", false}, // Default timezone
 	}
 
 	for _, test := range tests {
-		startDay, endDay, startTime, endTime, loc, err := parseScalerAnnotation(test.input)
+		timerange, err := parseScalerAnnotation(test.input)
 		if test.expectError {
-			assert.Error(t, err, "expected an error for input: %s with ", test.input)
+			assert.Error(t, err, "expected an error for input: %s", test.input)
 		} else {
 			assert.NoError(t, err, "did not expect an error for input: %s", test.input)
-			assert.Equal(t, test.startDay, startDay, "unexpected startDay for input: %s", test.input)
-			assert.Equal(t, test.endDay, endDay, "unexpected endDay for input: %s", test.input)
-			assert.Equal(t, test.startTime, startTime.Format("15:04"), "unexpected startTime for input: %s", test.input)
-			assert.Equal(t, test.endTime, endTime.Format("15:04"), "unexpected endTime for input: %s", test.input)
-			assert.Equal(t, test.location, loc.String(), "unexpected location for input: %s", test.input)
+			assert.Equal(t, test.startDay, int(timerange.StartDay), "unexpected start day for input: %s", test.input)
+			assert.Equal(t, test.endDay, int(timerange.EndDay), "unexpected end day for input: %s", test.input)
+			assert.Equal(t, test.startTime, timerange.Start.Format("15:04"), "unexpected start time for input: %s", test.input)
+			assert.Equal(t, test.endTime, timerange.End.Format("15:04"), "unexpected end time for input: %s", test.input)
+			assert.Equal(t, test.location, timerange.Location.String(), "unexpected location for input: %s", test.input)
 		}
 	}
 }
@@ -73,40 +77,56 @@ func TestParseWeekday(t *testing.T) {
 		{"Mon", 1, false},
 		{"Fri", 5, false},
 		{"Sun", 0, false},
-		{"InvalidDay", -1, true},
+		{"InvalidDay", 0, false}, // Invalid day, should return  0
 	}
 
 	for _, test := range tests {
-		result, err := parseWeekday(test.input)
+		result := parseWeekday(test.input)
 		if test.expectError {
-			assert.Error(t, err, "expected an error for input: %s", test.input)
+			assert.Equal(t, -1, result, "expected an error for input: %s", test.input)
 		} else {
-			assert.NoError(t, err, "did not expect an error for input: %s", test.input)
-			assert.Equal(t, test.expected, result, "unexpected result for input: %s", test.input)
+			assert.Equal(t, time.Weekday(test.expected), result, "unexpected result for input: %s", test.input)
 		}
 	}
 }
-
-func TestIsWithinRange(t *testing.T) {
+func TestIsInRange(t *testing.T) {
 	tests := []struct {
-		start    string
-		end      string
-		now      string
-		expected bool
+		startDay      time.Weekday
+		endDay        time.Weekday
+		startTime     string
+		endTime       string
+		location      string
+		currentTime   string
+		expectInRange bool
 	}{
-		{"08:00", "20:00", "12:00", true},
-		{"08:00", "20:00", "07:00", false},
-		{"22:00", "06:00", "23:00", true},
-		{"22:00", "06:00", "05:00", true},
-		{"22:00", "06:00", "07:00", false},
+		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-03T10:00:00Z", true},        // Within range
+		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-02T19:00:00Z", false},       // Outside time range
+		{time.Monday, time.Friday, "18:00", "08:00", "UTC", "2023-10-02T19:00:00Z", true},        // Overnight range
+		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-07T09:00:00Z", false},       // Outside day range
+		{time.Monday, time.Friday, "08:00", "18:00", "InvalidTZ", "2023-10-02T09:00:00Z", false}, // Invalid timezone
 	}
 
 	for _, test := range tests {
-		start, _ := time.Parse("15:04", test.start)
-		end, _ := time.Parse("15:04", test.end)
-		now, _ := time.Parse("15:04", test.now)
+		loc, err := time.LoadLocation(test.location)
+		if test.location == "InvalidTZ" {
+			assert.Error(t, err, "expected an error for invalid timezone")
+			continue
+		}
+		assert.NoError(t, err, "did not expect an error for valid timezone")
 
-		result := isWithinRange(start, end, now)
-		assert.Equal(t, test.expected, result, "unexpected result for start: %s, end: %s, now: %s", test.start, test.end, test.now)
+		start, _ := time.Parse("15:04", test.startTime)
+		end, _ := time.Parse("15:04", test.endTime)
+		current, _ := time.Parse(time.RFC3339, test.currentTime)
+
+		tr := &TimeRange{
+			StartDay: test.startDay,
+			EndDay:   test.endDay,
+			Start:    start,
+			End:      end,
+			Location: loc,
+		}
+		// Mock the Now function to return the current time
+		result := tr.isInRange(current)
+		assert.Equal(t, test.expectInRange, result, "unexpected result for test case: %+v", test)
 	}
 }

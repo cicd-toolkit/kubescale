@@ -13,9 +13,16 @@ Define when the resource **should be running**.
 ```yaml
 kubescale/uptime: "Mon-Fri 08:00-20:00 Europe/Paris"
 ```
-Format: WEEKDAY-FROM-WEEKDAY-TO HH:MM-HH:MM TIMEZONE
+Format suppported:
+| Annotation                  | Interpreted As                                |
+|-----------------------------|-----------------------------------------------|
+| `08:00-18:00`              | Every day, 08:00–18:00 UTC                    |
+| `Mon-Fri 09:00-17:00`      | Mon–Fri, 09:00–17:00 UTC                      |
+| `08:00-20:00 Europe/Berlin`| Every day, 08:00–20:00 in Europe/Berlin       |
+| `Sat-Sun 10:00-22:00 Asia/Tokyo` | Sat–Sun, 10:00–22:00 in Asia/Tokyo       |
 
-Timezone must be an IANA TZ (e.g. UTC, Europe/Berlin)
+
+> Timezone must be an IANA TZ (e.g. UTC, Europe/Berlin)
 
 🌙 kubescale/downtime
 Define when the resource should be OFF.

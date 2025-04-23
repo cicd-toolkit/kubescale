@@ -18,80 +18,122 @@ package controller
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func parseScalerAnnotation(val string) (startDay, endDay int, startTime, endTime time.Time, loc *time.Location, err error) {
-	// Example: "Mon-Fri 08:00-20:00 UTC"
-	parts := strings.Fields(val)
-	if len(parts) != 3 {
-		err = fmt.Errorf("invalid format, expected: 'Mon-Fri HH:MM-HH:MM TZ'")
-		return
-	}
-
-	// Parse weekday range
-	dayParts := strings.Split(parts[0], "-")
-	if len(dayParts) != 2 {
-		err = fmt.Errorf("invalid weekday range")
-		return
-	}
-	startDay, err = parseWeekday(dayParts[0])
-	if err != nil {
-		return
-	}
-	endDay, err = parseWeekday(dayParts[1])
-	if err != nil {
-		return
-	}
-
-	// Parse time range
-	timeParts := strings.Split(parts[1], "-")
-	if len(timeParts) != 2 {
-		err = fmt.Errorf("invalid time range")
-		return
-	}
-	startTime, err = time.Parse("15:04", timeParts[0])
-	if err != nil {
-		return
-	}
-	endTime, err = time.Parse("15:04", timeParts[1])
-	if err != nil {
-		return
-	}
-
-	// Parse timezone
-	loc, err = time.LoadLocation(parts[2])
-	return
+type TimeRange struct {
+	StartDay time.Weekday
+	EndDay   time.Weekday
+	Start    time.Time
+	End      time.Time
+	Location *time.Location
 }
 
-func parseWeekday(day string) (int, error) {
-	switch strings.ToLower(day) {
+func parseScalerAnnotation(annot string) (*TimeRange, error) {
+	var timeRangeRegex = regexp.MustCompile(`(?:(\w{3})-(\w{3})\s+)?(\d{2}:\d{2})-(\d{2}:\d{2})(?:\s+([\w/_+-]+))?`)
+
+	matches := timeRangeRegex.FindStringSubmatch(annot)
+	if matches == nil {
+		return nil, fmt.Errorf("invalid format: %s", annot)
+	}
+
+	startDayStr := matches[1]
+	endDayStr := matches[2]
+	startTimeStr := matches[3]
+	endTimeStr := matches[4]
+	timezone := matches[5]
+
+	// Default days if not specified
+	startDay := time.Sunday
+	endDay := time.Saturday
+	if startDayStr != "" && endDayStr != "" {
+		startDay = parseWeekday(startDayStr)
+		endDay = parseWeekday(endDayStr)
+	}
+
+	// Default timezone if not specified
+	loc := time.UTC
+	if timezone != "" {
+		var err error
+		loc, err = time.LoadLocation(timezone)
+		if err != nil {
+			return nil, fmt.Errorf("invalid timezone: %s", timezone)
+		}
+	}
+
+	start, err := parseHourMin(startTimeStr)
+	if err != nil {
+		return nil, err
+	}
+	end, err := parseHourMin(endTimeStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TimeRange{
+		StartDay: startDay,
+		EndDay:   endDay,
+		Start:    start,
+		End:      end,
+		Location: loc,
+	}, nil
+}
+
+func (tr *TimeRange) isInRange(t time.Time) bool {
+	now := time.Now().In(tr.Location)
+	if !t.IsZero() {
+		fmt.Printf("Using provided time: %s\n", t)
+		now = t.In(tr.Location)
+	}
+	weekday := int(now.Weekday())
+	fmt.Printf("Current time: %s, Weekday: %d\n", now.Format("15:04"), weekday)
+
+	// Check day range
+	withinDay := int(tr.StartDay) <= int(tr.EndDay) && weekday >= int(tr.StartDay) && weekday <= int(tr.EndDay) ||
+		int(tr.StartDay) > int(tr.EndDay) && (weekday >= int(tr.StartDay) || weekday <= int(tr.EndDay))
+
+	// Check time range
+	nowTime, _ := time.Parse("15:04", now.Format("15:04"))
+	var withinTime bool
+	if tr.Start.Before(tr.End) {
+		withinTime = nowTime.After(tr.Start) && nowTime.Before(tr.End)
+	} else {
+		withinTime = nowTime.After(tr.Start) || nowTime.Before(tr.End)
+	}
+
+	return withinDay && withinTime
+}
+
+func parseHourMin(s string) (time.Time, error) {
+	t, err := time.Parse("15:04", s)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return t, nil
+}
+
+func parseWeekday(s string) time.Weekday {
+	switch strings.ToLower(s) {
 	case "sun":
-		return 0, nil
+		return time.Sunday
 	case "mon":
-		return 1, nil
+		return time.Monday
 	case "tue":
-		return 2, nil
+		return time.Tuesday
 	case "wed":
-		return 3, nil
+		return time.Wednesday
 	case "thu":
-		return 4, nil
+		return time.Thursday
 	case "fri":
-		return 5, nil
+		return time.Friday
 	case "sat":
-		return 6, nil
+		return time.Saturday
+	default:
+		return time.Sunday // fallback
 	}
-	return -1, fmt.Errorf("invalid weekday: %s", day)
-}
-
-func isWithinRange(start, end, now time.Time) bool {
-	if start.Before(end) {
-		return now.After(start) && now.Before(end)
-	}
-	// Overnight: e.g., 22:00 to 06:00
-	return now.After(start) || now.Before(end)
 }
 
 func isNowInUptime(startDay, endDay int, start, end time.Time, loc *time.Location) bool {
