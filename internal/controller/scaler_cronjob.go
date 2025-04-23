@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	batchv1 "k8s.io/api/batch/v1"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
@@ -39,7 +40,7 @@ func (r *ScalerReconciler) handleCronJob(ctx context.Context, cj *batchv1.CronJo
 	if val, ok := annotations[DowntimeAnnotation]; ok {
 		timerange, err := parseScalerAnnotation(val)
 		if err == nil {
-			inDowntime = timerange.isInRange()
+			inDowntime = timerange.isInRange(time.Time{})
 		}
 	}
 
@@ -47,7 +48,7 @@ func (r *ScalerReconciler) handleCronJob(ctx context.Context, cj *batchv1.CronJo
 		if val, ok := annotations[UptimeAnnotation]; ok {
 			timerange, err := parseScalerAnnotation(val)
 			if err == nil {
-				inUptime = timerange.isInRange()
+				inUptime = timerange.isInRange(time.Time{})
 			}
 		}
 	}
