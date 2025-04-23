@@ -22,7 +22,7 @@ jobs:
 
       - name: build docker
         run: |
-            #make docker-build
+            make docker-build
 
       - name: run
         run: |
