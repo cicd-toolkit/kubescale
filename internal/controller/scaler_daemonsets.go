@@ -18,23 +18,21 @@ package controller
 
 import (
 	"context"
-	"fmt"
-	"strconv"
+	"encoding/json"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func (r *ScalerReconciler) handleReplicatedResource(
+func (r *ScalerReconciler) handleDaemonSets(
 	ctx context.Context,
-	meta *meta.ObjectMeta,
 	nsAnnotations map[string]string,
-	replicas *int32,
+	ds *appsv1.DaemonSet,
 	updateFunc func(int32) error,
 ) {
 	log := ctrllog.FromContext(ctx)
+	meta := &ds.ObjectMeta
 	annotations := MergeAnnotations(nsAnnotations, meta.Annotations)
 	if annotations == nil {
 		log.Info("No annotations found for resource", "namespace", meta.Namespace, "name", meta.Name)
@@ -65,27 +63,35 @@ func (r *ScalerReconciler) handleReplicatedResource(
 	}
 
 	// scale to 0 if in downtime
-	if inDowntime && *replicas != 0 {
+	if inDowntime {
 		// Save current replica count
-		meta.Annotations[PreviousReplicasAnnotation] = fmt.Sprintf("%d", *replicas)
-		log.Info("Scaling down resource", "namespace", meta.Namespace, "name", meta.Name)
-		_ = updateFunc(0)
-		_ = r.Client.Update(ctx, &appsv1.Deployment{
-			ObjectMeta: *meta,
-		})
+		nodeSelectorJSON, err := json.Marshal(ds.Spec.Template.Spec.NodeSelector)
+		if err != nil {
+			log.Error(err, "Failed to serialize NodeSelector", "namespace", meta.Namespace, "name", meta.Name)
+			return
+		}
+		ds.ObjectMeta.Annotations[PreviousReplicasAnnotation] = string(nodeSelectorJSON)
+		log.Info("Force NodeSelector", "namespace", meta.Namespace, "name", meta.Name)
+		ds.Spec.Template.Spec.NodeSelector = map[string]string{
+			"kubescale-suspend-daemonset": "true",
+		}
+		_ = r.Client.Update(ctx, ds)
 		return
 	}
 
 	// restore if not in downtime and in uptime
-	if !inDowntime && inUptime && *replicas == 0 {
-		restore := int32(1)
+	if !inDowntime && inUptime {
+		var nodeSelector map[string]string
 		if val, ok := annotations[PreviousReplicasAnnotation]; ok {
-			if prev, err := strconv.Atoi(val); err == nil && prev > 0 {
-				restore = int32(prev)
+			if err := json.Unmarshal([]byte(val), &nodeSelector); err != nil {
+				log.Error(err, "Failed to deserialize NodeSelector", "namespace", meta.Namespace, "name", meta.Name)
+				return
 			}
 		}
-		delete(meta.Annotations, PreviousReplicasAnnotation)
-		log.Info("Restoring resource", "namespace", meta.Namespace, "name", meta.Name)
-		_ = updateFunc(restore)
+		ds.Spec.Template.Spec.NodeSelector = nodeSelector
+		delete(ds.ObjectMeta.Annotations, PreviousReplicasAnnotation)
+		log.Info("Restoring NodeSelector", "namespace", meta.Namespace, "name", meta.Name)
+		_ = r.Client.Update(ctx, ds)
+		return
 	}
 }

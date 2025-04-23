@@ -24,6 +24,19 @@ import (
 	"time"
 )
 
+func MergeAnnotations(nsAnnotations, rsAnnotations map[string]string) map[string]string {
+	merged := make(map[string]string)
+	for k, v := range nsAnnotations {
+		if strings.HasPrefix(k, BaseAnnotation+"/") {
+			merged[k] = v
+		}
+	}
+	for k, v := range rsAnnotations {
+		merged[k] = v
+	}
+	return merged
+}
+
 type TimeRange struct {
 	StartDay time.Weekday
 	EndDay   time.Weekday
@@ -89,8 +102,6 @@ func (tr *TimeRange) isInRange(t time.Time) bool {
 		now = t.In(tr.Location)
 	}
 	weekday := int(now.Weekday())
-	fmt.Printf("Current time: %s, Weekday: %d\n", now.Format("15:04"), weekday)
-
 	// Check day range
 	withinDay := int(tr.StartDay) <= int(tr.EndDay) && weekday >= int(tr.StartDay) && weekday <= int(tr.EndDay) ||
 		int(tr.StartDay) > int(tr.EndDay) && (weekday >= int(tr.StartDay) || weekday <= int(tr.EndDay))

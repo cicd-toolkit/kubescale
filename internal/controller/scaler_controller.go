@@ -24,6 +24,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -39,13 +40,15 @@ type ScalerReconciler struct {
 }
 
 const (
-	UptimeAnnotation           = "kubescale/uptime"
-	DowntimeAnnotation         = "kubescale/downtime"
-	PreviousReplicasAnnotation = "kubescale/previous-replicas"
-	ExcludeAnnotation          = "kubescale/exclude"
-	ExcludeUntilAnnotation     = "kubescale/exclude-until"
-	UpDurationAnnotation       = "kubescale/up"
-	DownDurationAnnotation     = "kubescale/down"
+	BaseAnnotation             = "kubescale"
+	UptimeAnnotation           = BaseAnnotation + "/uptime"
+	DowntimeAnnotation         = BaseAnnotation + "/downtime"
+	PreviousReplicasAnnotation = BaseAnnotation + "/previous-replicas"
+	CustomReplicaAnnotation    = BaseAnnotation + "/replicas"
+	ExcludeAnnotation          = BaseAnnotation + "/exclude"
+	ExcludeUntilAnnotation     = BaseAnnotation + "/exclude-until"
+	UpDurationAnnotation       = BaseAnnotation + "/up"
+	DownDurationAnnotation     = BaseAnnotation + "/down"
 )
 
 // +kubebuilder:rbac:groups=autoscale.kubescale.io,resources=scalers,verbs=get;list;watch;create;update;patch;delete
@@ -84,12 +87,26 @@ func (r *ScalerReconciler) checkResources() error {
 	log := ctrllog.FromContext(ctx)
 	now := time.Now().UTC()
 
+	// Fetch namespace annotations
+	nsMapAnnotations := make(map[string]map[string]string)
+	var nsList corev1.NamespaceList
+	if err := r.Client.List(ctx, &nsList); err == nil { // List all namespaces
+		for _, ns := range nsList.Items {
+			if nsAnn := ns.GetAnnotations(); nsAnn != nil {
+				nsMapAnnotations[ns.Name] = nsAnn
+			}
+		}
+	} else {
+		log.Error(err, "Error listing namespaces")
+	}
+
 	// --- Deployments ---
 	var deployList appsv1.DeploymentList
 	if err := r.Client.List(ctx, &deployList, client.InNamespace("")); err == nil { // Fetch all namespaces
 		for _, dep := range deployList.Items {
 			r.transformAnnotations(ctx, &dep, now)
-			r.handleReplicatedResource(ctx, &dep.ObjectMeta, dep.Spec.Replicas, func(newReplicas int32) error {
+			nsAnnotations := nsMapAnnotations[dep.GetNamespace()]
+			r.handleReplicatedResource(ctx, &dep.ObjectMeta, nsAnnotations, dep.Spec.Replicas, func(newReplicas int32) error {
 				dep.Spec.Replicas = &newReplicas
 				return r.Client.Update(ctx, &dep)
 			})
@@ -103,7 +120,8 @@ func (r *ScalerReconciler) checkResources() error {
 	if err := r.Client.List(ctx, &stsList, client.InNamespace("")); err == nil { // Fetch all namespaces
 		for _, sts := range stsList.Items {
 			r.transformAnnotations(ctx, &sts, now)
-			r.handleReplicatedResource(ctx, &sts.ObjectMeta, sts.Spec.Replicas, func(newReplicas int32) error {
+			nsAnnotations := nsMapAnnotations[sts.GetNamespace()]
+			r.handleReplicatedResource(ctx, &sts.ObjectMeta, nsAnnotations, sts.Spec.Replicas, func(newReplicas int32) error {
 				sts.Spec.Replicas = &newReplicas
 				return r.Client.Update(ctx, &sts)
 			})
@@ -112,12 +130,28 @@ func (r *ScalerReconciler) checkResources() error {
 		log.Error(err, "Error listing statefulsets")
 	}
 
+	// --- DaemonSets ---
+	var dsList appsv1.DaemonSetList
+	if err := r.Client.List(ctx, &dsList, client.InNamespace("")); err == nil { // Fetch all namespaces
+		for _, ds := range dsList.Items {
+			r.transformAnnotations(ctx, &ds, now)
+			nsAnnotations := nsMapAnnotations[ds.GetNamespace()]
+			r.handleDaemonSets(ctx, nsAnnotations, &ds, func(newReplicas int32) error {
+				// DaemonSets do not have replicas, so we don't need to update them
+				return nil
+			})
+		}
+	} else {
+		log.Error(err, "Error listing daemonsets")
+	}
+
 	// --- CronJobs ---
 	var cjList batchv1.CronJobList
 	if err := r.Client.List(ctx, &cjList, client.InNamespace("")); err == nil { // Fetch all namespaces
 		for _, cj := range cjList.Items {
 			r.transformAnnotations(ctx, &cj, now)
-			r.handleCronJob(ctx, &cj)
+			nsAnnotations := nsMapAnnotations[cj.GetNamespace()]
+			r.handleCronJob(ctx, nsAnnotations, &cj)
 		}
 	} else {
 		log.Error(err, "Error listing cronjobs")

@@ -24,9 +24,9 @@ import (
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func (r *ScalerReconciler) handleCronJob(ctx context.Context, cj *batchv1.CronJob) {
+func (r *ScalerReconciler) handleCronJob(ctx context.Context, nsAnnotations map[string]string, cj *batchv1.CronJob) {
 	log := ctrllog.FromContext(ctx)
-	annotations := cj.Annotations
+	annotations := MergeAnnotations(nsAnnotations, cj.Annotations)
 	if annotations == nil {
 		return
 	}
