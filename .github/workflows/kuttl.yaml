@@ -36,6 +36,8 @@ jobs:
           echo "### Let's try to use kuttl"
           kubectl kuttl --version
 
+          docker image ls
+
           echo "### Run kuttl tests"
           kubectl kuttl test
 
