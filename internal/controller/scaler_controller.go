@@ -57,10 +57,8 @@ const (
 
 // Reconcile is part of the main Kubernetes reconciliation loop
 func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	// TODO(user): your logic here
-
+	logger := log.FromContext(ctx)
+	logger.Info("Reconcile start")
 	return ctrl.Result{}, nil
 }
 
