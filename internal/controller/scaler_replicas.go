@@ -47,17 +47,17 @@ func (r *ScalerReconciler) handleReplicatedResource(
 
 	// Handle downtime first (it takes priority)
 	if val, ok := annotations[DowntimeAnnotation]; ok {
-		sd, ed, st, et, loc, err := parseScalerAnnotation(val)
+		timerange, err := parseScalerAnnotation(val)
 		if err == nil {
-			inDowntime = isNowInUptime(sd, ed, st, et, loc)
+			inDowntime = timerange.isInRange()
 		}
 	}
 
 	if !inDowntime {
 		if val, ok := annotations[UptimeAnnotation]; ok {
-			sd, ed, st, et, loc, err := parseScalerAnnotation(val)
+			timerange, err := parseScalerAnnotation(val)
 			if err == nil {
-				inUptime = isNowInUptime(sd, ed, st, et, loc)
+				inUptime = timerange.isInRange()
 			}
 		}
 	}
