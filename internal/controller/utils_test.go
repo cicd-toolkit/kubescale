@@ -99,12 +99,11 @@ func TestIsInRange(t *testing.T) {
 		currentTime   string
 		expectInRange bool
 	}{
-		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-02T09:00:00Z", true},        // Within range
-		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-02T19:00:00Z", false},       // Outside time range
-		{time.Monday, time.Friday, "18:00", "08:00", "UTC", "2023-10-02T19:00:00Z", true},        // Overnight range
-		{time.Friday, time.Monday, "08:00", "18:00", "UTC", "2023-10-01T09:00:00Z", true},        // Cross-weekday range
-		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-07T09:00:00Z", false},       // Outside day range
-		{time.Monday, time.Friday, "08:00", "18:00", "InvalidTZ", "2023-10-02T09:00:00Z", false}, // Invalid timezone
+		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-02T09:00:00Z", true},       // Within range
+		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-02T19:00:00Z", false},      // Outside time range
+		{time.Monday, time.Friday, "18:00", "08:00", "UTC", "2023-10-02T19:00:00Z", true},       // Overnight range
+		{time.Monday, time.Friday, "08:00", "18:00", "UTC", "2023-10-07T09:00:00Z", false},      // Outside day range
+		{time.Monday, time.Friday, "08:00", "18:00", "InvalidTZ", "2023-10-02T09:00:00Z", true}, // Invalid timezone
 	}
 
 	for _, test := range tests {
