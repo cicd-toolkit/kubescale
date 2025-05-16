@@ -1,0 +1,10 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+  - command: |
+      while [[ "1" != "kubectl get deployment -n kuttl-test-natural-hippo echo-service-replica-1 -o jsonpath="{.metadata.annotations.kubescale/previous-replicas}"" ]]; do
+        echo "annotation set"
+        sleep 5
+      done
+    timeout: 80
+

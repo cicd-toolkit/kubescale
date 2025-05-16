@@ -1,4 +1,4 @@
-name: kubescaler
+name: kubescale
 apiVersion: v1
 version: "0.0.1"
 appVersion: 0.0.1
@@ -7,7 +7,7 @@ keywords:
 - k8s pods scheduler
 sources:
 - https://github.com/cicd-toolkit/helm-charts
-home: https://github.com/cicd-toolkit/kubescaler
+home: https://github.com/cicd-toolkit/kubescale
 maintainers:
 - name: giuliocalzolari
   url: https://github.com/giuliocalzolari
