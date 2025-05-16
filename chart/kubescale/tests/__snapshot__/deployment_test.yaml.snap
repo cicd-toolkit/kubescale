@@ -9,7 +9,7 @@ manifest should match snapshot:
         app.kubernetes.io/name: kubescale
         app.kubernetes.io/version: 0.0.1
         helm.sh/chart: kubescale-100.2.3
-      name: test-release-kubescale
+      name: kubescale
     spec:
       replicas: 1
       selector:
@@ -28,7 +28,7 @@ manifest should match snapshot:
                 - --health-probe-bind-address=:8081
               command:
                 - /manager
-              image: ghcr.io/cicd-toolkit/cicd-toolkit/kubescale:latest
+              image: ghcr.io/cicd-toolkit/kubescale:latest
               imagePullPolicy: IfNotPresent
               livenessProbe:
                 httpGet:

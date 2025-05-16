@@ -19,7 +19,7 @@ rbac:
    #     - patch
 
 image:
-  repository: ghcr.io/cicd-toolkit/cicd-toolkit/kubescale
+  repository: ghcr.io/cicd-toolkit/kubescale
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
   pullPolicy: IfNotPresent
