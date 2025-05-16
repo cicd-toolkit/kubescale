@@ -1,0 +1,13 @@
+remote: origin
+target-branch: master
+chart-dirs:
+- chart
+helm-extra-args: "--timeout 600s"
+helm-dependency-extra-args: []
+validate-chart-schema: true
+validate-chart-values: true
+validate-maintainers: false
+check-version-increment: false
+validate-yaml: true
+exclude-deprecated: true
+
