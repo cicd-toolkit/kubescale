@@ -1,10 +1,10 @@
 apiVersion: kuttl.dev/v1beta1
 kind: TestSuite
-startKIND: true
+startKIND: false
 kindNodeCache: true
 testDirs:
 - ./test/e2e/
 kindContainers:
   - registry.localhost:5000/devopscloud/kubescale:latest
 commands:
-  - command: helm upgrade --install krel ./chart/kubescale -f ./chart/kubescale/values-local.yaml -n kubescale-system --create-namespace
+  - command: helm upgrade --install krel ./chart/kubescale --set image.tag=latest -n kubescale-system --create-namespace --wait

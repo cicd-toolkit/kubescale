@@ -4,6 +4,8 @@ metadata:
   name: echo-service-replica-1
   labels:
     app: echo-service-replica-1
+  annotations:
+    kubescale/downtime: "Mon-Sun 00:00-23:59 UTC"
 spec:
   replicas: 1
   selector:

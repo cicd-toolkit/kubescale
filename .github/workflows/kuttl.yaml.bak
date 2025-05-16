@@ -35,6 +35,8 @@ jobs:
 
           make docker-build
           docker image ls
+          docker tag registry.localhost:5000/devopscloud/kubescale:latest devopscloud/kubescale:latest
+          docker push devopscloud/kubescale:latest
 
           echo "### Run kuttl tests"
           kubectl kuttl test

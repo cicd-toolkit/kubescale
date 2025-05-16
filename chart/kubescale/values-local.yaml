@@ -1,3 +1,0 @@
-image:
-  repository: registry.localhost:5000/devopscloud/kubescale
-  tag: latest
