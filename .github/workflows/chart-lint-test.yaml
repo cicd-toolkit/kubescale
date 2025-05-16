@@ -2,6 +2,16 @@ name: Lint and Test Charts
 
 on: pull_request
 
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   lint-test:
     runs-on: ubuntu-latest
@@ -26,6 +36,18 @@ jobs:
         run: |
           ct lint --all  --config .github/configs/ct-lint.yaml --target-branch ${{ github.event.repository.default_branch }}
 
+      - name: run tests
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest
+          cd chart/kubescale
+          helm unittest --debug . -o result.xml -t JUnit
 
 
-
+      - name: Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: helm unit Tests
+          path: "**/result.xml"
+          reporter: java-junit
+          fail-on-error: true

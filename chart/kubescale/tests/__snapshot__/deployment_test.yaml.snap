@@ -1,0 +1,69 @@
+manifest should match snapshot:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: test-release
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: kubescale
+        app.kubernetes.io/version: 0.0.1
+        helm.sh/chart: kubescale-100.2.3
+      name: test-release-kubescale
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: test-release
+          app.kubernetes.io/name: kubescale
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/instance: test-release
+            app.kubernetes.io/name: kubescale
+        spec:
+          containers:
+            - args:
+                - --leader-elect
+                - --health-probe-bind-address=:8081
+              command:
+                - /manager
+              image: ghcr.io/cicd-toolkit/cicd-toolkit/kubescale:latest
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                httpGet:
+                  path: /healthz
+                  port: 8081
+                initialDelaySeconds: 15
+                periodSeconds: 20
+              name: test-release-kubescale
+              readinessProbe:
+                httpGet:
+                  path: /readyz
+                  port: 8081
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 150m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsGroup: 1001
+                runAsNonRoot: true
+                runAsUser: 1001
+                seLinuxOptions: {}
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroupChangePolicy: Always
+            supplementalGroups: []
+            sysctls: []
+          serviceAccountName: test-release-kubescale

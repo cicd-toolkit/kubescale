@@ -1,0 +1,12 @@
+suite: test deployment
+templates:
+- deployment.yaml
+release:
+  name: test-release
+  namespace: test-namespace
+tests:
+- it: manifest should match snapshot
+  chart:
+    version: 100.2.3
+  asserts:
+  - matchSnapshot: {}
