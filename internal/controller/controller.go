@@ -27,8 +27,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -77,6 +79,7 @@ func (r *ScalerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&appsv1.Deployment{}).   // Watches deployments
 		Owns(&appsv1.StatefulSet{}). // Watches statefulsets
 		Owns(&batchv1.CronJob{}).    // Watches cronjobs
+		Owns(&appsv1.DaemonSet{}).   // Watches daemonsets
 		Complete(r)
 }
 
@@ -153,6 +156,29 @@ func (r *ScalerReconciler) checkResources() error {
 		}
 	} else {
 		log.Error(err, "Error listing cronjobs")
+	}
+
+	dynamicClient, err := dynamic.NewForConfig(config.GetConfigOrDie())
+	if err != nil {
+		return fmt.Errorf("failed to create dynamic client: %w", err)
+	}
+
+	// --- Prometheus ---
+
+	// List all CRDs
+	crdList, err := dynamicClient.Resource(PrometheusGVR).List(ctx, meta.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list Prometheus: %w", err)
+	}
+
+	// Process CRDs
+	for _, crd := range crdList.Items {
+		r.transformAnnotations(ctx, &crd, now)
+		nsAnnotations := nsMapAnnotations[crd.GetNamespace()]
+		err = r.handlePrometheus(ctx, nsAnnotations, &crd)
+		if err != nil {
+			return fmt.Errorf("failed to handlePrometheus: %w", err)
+		}
 	}
 
 	return nil
