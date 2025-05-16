@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "kubescaler.fullname" . }}
+  name: {{ template "kubescale.fullname" . }}
   labels:
-{{ include "kubescaler.labels" . | indent 4 }}
+{{ include "kubescale.labels" . | indent 4 }}
     {{- if .Values.extraLabels }}
       {{- toYaml .Values.extraLabels | nindent 4 }}
     {{- end }}
@@ -11,12 +11,12 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "kubescaler.name" . }}
+      app.kubernetes.io/name: {{ include "kubescale.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "kubescaler.name" . }}
+        app.kubernetes.io/name: {{ include "kubescale.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         {{- if .Values.extraLabels }}
           {{- toYaml .Values.extraLabels | nindent 8 }}
@@ -25,13 +25,13 @@ spec:
       {{- if .Values.priorityClassName }}
       priorityClassName: "{{ .Values.priorityClassName }}"
       {{- end }}
-      serviceAccountName: {{ if .Values.rbac.create }}{{ template "kubescaler.fullname" . }}{{ else }}"{{ .Values.rbac.serviceAccountName }}"{{ end }}
+      serviceAccountName: {{ if .Values.rbac.create }}{{ template "kubescale.fullname" . }}{{ else }}"{{ .Values.rbac.serviceAccountName }}"{{ end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-      - name: {{ template "kubescaler.fullname" . }}
+      - name: {{ template "kubescale.fullname" . }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         command:
           - /manager

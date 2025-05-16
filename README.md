@@ -1,4 +1,4 @@
-# kubescaler
+# kubescale
 # 🧭 Kubescale Operator – Annotation Guide
 
 The **Kubescale Operator** enables automatic scaling of Deployments, StatefulSets, and CronJobs based on custom annotations.
@@ -81,7 +81,7 @@ kubescale/exclude-until: "2025-04-23T08:00:00Z"
 **Build and push your image to the location specified by `IMG`:**
 
 ```sh
-make docker-build docker-push IMG=<some-registry>/kubescaler:tag
+make docker-build docker-push IMG=<some-registry>/kubescale:tag
 ```
 
 **NOTE:** This image ought to be published in the personal registry you specified.
@@ -97,7 +97,7 @@ make install
 **Deploy the Manager to the cluster with the image specified by `IMG`:**
 
 ```sh
-make deploy IMG=<some-registry>/kubescaler:tag
+make deploy IMG=<some-registry>/kubescale:tag
 ```
 
 
@@ -120,7 +120,7 @@ Following are the steps to build the installer and distribute this project to us
 1. Build the installer for the image built and published in the registry:
 
 ```sh
-make build-installer IMG=<some-registry>/kubescaler:tag
+make build-installer IMG=<some-registry>/kubescale:tag
 ```
 
 NOTE: The makefile target mentioned above generates an 'install.yaml'
@@ -133,7 +133,7 @@ its dependencies.
 Users can just run kubectl apply -f <URL for YAML BUNDLE> to install the project, i.e.:
 
 ```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/kubescaler/<tag or branch>/dist/install.yaml
+kubectl apply -f https://raw.githubusercontent.com/<org>/kubescale/<tag or branch>/dist/install.yaml
 ```
 
 ## Contributing

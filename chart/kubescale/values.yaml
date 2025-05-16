@@ -1,11 +1,11 @@
-## How many kubescaler pods should run in deployment
+## How many kubescale pods should run in deployment
 replicaCount: 1
 
 rbac:
   ## If true, create & use RBAC resources
   create: true
   ## Ignored if rbac.create is true
-  serviceAccountName: kubescaler
+  serviceAccountName: kubescale
   extraRules: []
    # - apiGroups:
    #     - argoproj.io
@@ -19,20 +19,21 @@ rbac:
    #     - patch
 
 image:
-  repository: devopscloud/kubescale
+  repository: ghcr.io/cicd-toolkit/cicd-toolkit/kubescale
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
   pullPolicy: IfNotPresent
   args: []
-    # - --include-resources=deployments,cronjobs
+
+
 
 resources:
   limits:
-    cpu: 50m
-    memory: 200Mi
+    cpu: 1
+    memory: 1Gi
   requests:
-    cpu: 50m
-    memory: 200Mi
+    cpu: 150m
+    memory: 256Mi
 
 podSecurityContext:
   fsGroupChangePolicy: Always
@@ -53,10 +54,6 @@ containerSecurityContext:
 
 extraLabels: {}
 
-# Set environment variables to override the default configuration
-deployment:
-  environment: {}
-    # DEFAULT_UPTIME: "Mon-Fri 07:00-20:00 Europe/Berlin"
 
 imagePullSecrets: []
 nameOverride: ""
