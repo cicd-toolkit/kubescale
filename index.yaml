@@ -3,6 +3,23 @@ entries:
   kubescale:
   - apiVersion: v1
     appVersion: 0.0.1
+    created: "2025-05-16T10:42:49.594328872Z"
+    description: Scale up and down Kubernetes resources after work hours
+    digest: b7387ce01f19927caca0ad991140737770a8f0aed924f2f08593d09e9a47afc4
+    home: https://github.com/cicd-toolkit/kubescale
+    keywords:
+    - k8s pods scheduler
+    maintainers:
+    - name: giuliocalzolari
+      url: https://github.com/giuliocalzolari
+    name: kubescale
+    sources:
+    - https://github.com/cicd-toolkit/helm-charts
+    urls:
+    - https://github.com/cicd-toolkit/kubescale/releases/download/kubescale-0.0.2/kubescale-0.0.2.tgz
+    version: 0.0.2
+  - apiVersion: v1
+    appVersion: 0.0.1
     created: "2025-05-16T10:29:25.653891914Z"
     description: Scale up and down Kubernetes resources after work hours
     digest: 4ab34a99d7f656cf7cfe849e8d80656d9841c6f0156d147828c06609eba4d7df
@@ -18,4 +35,4 @@ entries:
     urls:
     - https://github.com/cicd-toolkit/kubescale/releases/download/kubescale-0.0.1/kubescale-0.0.1.tgz
     version: 0.0.1
-generated: "2025-05-16T10:29:25.653898236Z"
+generated: "2025-05-16T10:42:49.594341906Z"
