@@ -40,15 +40,6 @@ spec:
           - --health-probe-bind-address=:8081
         securityContext:
           {{- toYaml .Values.containerSecurityContext | nindent 10 }}
-        {{- with .Values.deployment.environment }}
-        env:
-        {{- range $key, $value := . }}
-          {{- if $value }}
-          - name: {{ $key }}
-            value: {{ $value | quote }}
-          {{- end }}
-        {{- end }}
-        {{- end }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         livenessProbe:
           httpGet:
